@@ -1,6 +1,18 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "components/*": ["src/components/*"],
+      "screens/*": ["src/screens/*"],
+      "helpers/*": ["src/helpers/*"],
+      "assets/*": ["assets/*"],
+      "store/*": ["src/store/*"],
+      "common/*": ["src/common/*"],
+      "navigations/*": ["src/navigations/*"],
+    }
+  },
+  "exclude": ["node_modules"]
 }
