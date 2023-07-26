@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, SafeAreaView, Dimensions } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
-import { border } from 'native-base/lib/typescript/theme/styled-system';
+import { HStack, Button, useToast } from 'native-base';
+import { ScanDynamicButton } from 'components/index'
+import * as Clipboard from 'expo-clipboard';
 
-
-// cornerPoints [{"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}, {"x": 0, "y": 0}] example data
-const cornerPoints = [
-    { "x": 68.7272720336914, "y": 267.2727355957031 },
-    { "x": 71.2727279663086, "y": 249.81817626953125 },
-    { "x": 162.90908813476562, "y": 498.5454406738281 },
-    { "x": 86.18181610107422, "y": 537.0908813476562 }
-]
+import Color from 'common/color';
 
 const { width, height } = Dimensions.get('window')
 
@@ -20,6 +15,8 @@ export const ScanScreen = () => {
     const [scanned, setScanned] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
     const [areaCorrect, setAreaCorrect] = useState<boolean>(false)
+    const [buttonData, setButtonData] = useState<Object>({})
+    const toast = useToast()
     const [cornerPoints, setCornerPoints] = useState([
         { "x": 0, "y": 0 },
         { "x": 0, "y": 0 },
@@ -41,6 +38,13 @@ export const ScanScreen = () => {
         { "x": widthRightLimit, "y": heightRightLimit },
     ]
 
+    const copyToClipboard = async (buttonData: any) => {
+        await Clipboard.setStringAsync(buttonData.data);
+        toast.show({
+            description: "Copied to Clipboard",
+        })
+    };
+
 
     const getBarCodeScannerPermissions = async () => {
         setHasPermission(null);
@@ -59,6 +63,7 @@ export const ScanScreen = () => {
         if (topStart && topEnd && bottomStart && bottomEnd) {
             setScanned(true);
             setAreaCorrect(true)
+            setButtonData({ type, data })
             const text = `Bar code with type ${type} and data ${data} has been scanned!`
             setText(text)
         } else {
@@ -75,7 +80,9 @@ export const ScanScreen = () => {
         return (
             <SafeAreaView className='bg-red-100 flex-1 i items-center justify-center'>
                 <Text>No access to camera</Text>
-                <Button title={'Allow Camera'} onPress={() => getBarCodeScannerPermissions()} />
+                <Button onPress={() => getBarCodeScannerPermissions()} >
+                    Allow Camera
+                </Button>
             </SafeAreaView>
         )
     }
@@ -194,8 +201,19 @@ export const ScanScreen = () => {
                     borderRadius: 10,
                     backgroundColor: areaCorrect ? 'green' : 'red'
                 }}></View>
-                {scanned && <View style={styles.scanButton}><Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} /></View>}
-
+                {
+                    scanned && (
+                        <HStack style={styles.scanButtons} justifyContent="space-around" alignItems="center" space={2}>
+                            <Button size="md" variant="ghost" onPress={() => setScanned(false)}>
+                                Tap to Scan Again
+                            </Button>
+                            <ScanDynamicButton buttonData={buttonData} />
+                            <Button size="md" variant="ghost" onPress={() => copyToClipboard(buttonData)}>
+                                Copy
+                            </Button>
+                        </HStack>
+                    )
+                }
             </View>
         </SafeAreaView>
     )
@@ -211,22 +229,25 @@ const styles = StyleSheet.create({
     barcodeBox: {
         width: '100%',
         height: '100%',
-
-        // overflow: 'hidden',
-        // position: 'relative'
-
     },
     absoluteFillObject: {
         width: '100%',
         height: '100%',
     },
-
-    scanButton: {
+    scanButtons: {
         position: 'absolute',
         bottom: 0,
         width: '100%',
         height: 50,
-        justifyContent: 'center',
-    }
+        backgroundColor: Color.secondary,
+    },
+
+    // scanButton: {
+    //     position: 'absolute',
+    //     bottom: 0,
+    //     width: '100%',
+    //     height: 50,
+    //     justifyContent: 'center',
+    // }
 
 });
